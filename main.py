@@ -17,7 +17,8 @@ def kth_element(
     def wrapper(
                 n: list[int],
                 k: int,
-                *args: Any
+                *args: Any,
+                root_call: bool = True
             ):
         """
         Procedure to take place any time a selector function
@@ -25,11 +26,15 @@ def kth_element(
         """
         start_time = time()
 
+        # if root_call:
+        #     k -= 1
+
         chosen = selector(n, k, *args)
 
         duration = time() - start_time
 
-        print(f"({selector.__name__}) | Time Taken: {duration:.4f} seconds | Selected: {chosen}")
+        if root_call:
+            print(f"({selector.__name__}) | Time Taken: {duration:.4f} seconds | Selected: {chosen}")
 
         return chosen, duration
 
@@ -74,17 +79,18 @@ def merge_sort(n: list[int]):
         j += 1
         k += 1
 
-def partition(n: list[int], start: int, end: int, pivot: int | None = None):
-    pivot = pivot or n[end]
+def partition(n: list[int], start: int, end: int):
+    pivot = n[end-1]
 
-    i = start - 1
+    i = start
     for j in range(start, end):
-        if n[j] <= pivot:
+        if n[j] < pivot:
+            n[i], n[j] = n[j], n[i]
             i += 1
-            (n[i], n[j]) = (n[j], n[i])
-    (n[i + 1], n[end]) = (n[end], n[i + 1])
 
-    return i + 1
+    (n[i], n[end-1]) = (n[end-1], n[i])
+
+    return i
 
 def find_median(n: list[int]):
     n_c = [i for i in n]
@@ -105,34 +111,26 @@ def median_medians(a: list[int], r: int = 5):
 def kth_merge_sort(n: list[int], k: int):
     """Uses Mergesort to sort the array then finds the kth smallest element"""
     merge_sort(n)
-    return n[k-1]
+    return n[k]
 
 @kth_element
-def kth_partition(n: list[int], k: int):
+def kth_partition(n: list[int], k: int, start: int = 0, end: int | None = None):
     """"""
-    k -= 1
+    end = end or len(n)
 
-    start = 0
-    end = len(n) - 1
-    while True:
+    pivot_pos = partition(n, start, end)
 
-        if (start >= end):
-            return n[start]
+    if k == pivot_pos:
+        return n[pivot_pos]
 
-        pivot_pos = partition(n, start, end)
-        if k == pivot_pos:
-            return n[k]
+    if k < pivot_pos:
+        return kth_partition(n, k, start, pivot_pos, root_call=False)[0]
 
-        if k < pivot_pos:
-            end = pivot_pos - 1
-        else:
-            start = pivot_pos + 1
+    return kth_partition(n, k, pivot_pos + 1, end, root_call=False)[0]
 
 @kth_element
 def kth_mm(n: list[int], k: int):
     """"""
-    k -= 1
-
     start = 0
     end = len(n) - 1
     while True:
@@ -151,19 +149,23 @@ def kth_mm(n: list[int], k: int):
 
 def execute():
 
-    # n, k = random_list_k(0, 10, 10)
+    n, k = random_list_k(0, 20, 10)
 
-    n = [7, 0, 4, 1, 7, 7, 7, 7, 9, 6]
-    k = 2
+    # n = [8, 7, 3, 15, 1, 3, 8, 4, 2, 19]
+    # k = 5
+    # print(sorted(n))
 
-    print(median_medians(n))
+    # print(partition(n, 0, len(n)))
+    # print(n)
+
+    # print(median_medians(n))
 
     # print("------")
     # print(n, k)
     # print("------")
 
-    # kth_merge_sort([i for i in n], k)
-    # kth_partition([i for i in n], k)
+    kth_merge_sort([i for i in n], k)[0]
+    kth_partition([i for i in n], k)[0]
     # kth_mm([i for i in n], k)
     # kth_mm([i for i in n], k)
 
